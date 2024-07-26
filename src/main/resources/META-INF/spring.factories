@@ -1,0 +1,2 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+  me.zhangjh.openai.config.OpenAiConfig
