@@ -6,6 +6,7 @@ import com.azure.ai.openai.models.*;
 import com.azure.core.util.BinaryData;
 import com.azure.core.util.IterableStream;
 import lombok.extern.slf4j.Slf4j;
+import me.zhangjh.openai.annotation.Desc;
 import me.zhangjh.openai.constant.RoleEnum;
 import me.zhangjh.openai.dto.ChatOption;
 import me.zhangjh.openai.dto.ContextMessage;
@@ -17,6 +18,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
@@ -49,6 +51,9 @@ public class OpenAiServiceImpl implements OpenAiService {
 
     @Autowired
     private OpenAIClient textOpenAIClient;
+
+    @Autowired
+    private ApplicationContext context;
 
     @Override
     public ImageGenerateDTO generateImage(ImageGenerateRequest request) {
@@ -84,19 +89,35 @@ public class OpenAiServiceImpl implements OpenAiService {
                 }
             }
         }
+        // 返回一个结束标记
+        cb.apply("[done]");
     }
 
     @Override
     public ChatCompletions generateTextWithFunctionCall(TextGenerateRequest request) throws Exception {
         ChatOption chatOption = request.getChatOption();
         String callFunctionClass = chatOption.getCallFunctionClass();
+        String callFunctionBeanName = chatOption.getCallFunctionBeanName();
         List<String> callFunctionMethodList = chatOption.getCallFunctionMethodList();
-        Assert.isTrue(StringUtils.isNotEmpty(callFunctionClass), "function call接口必须传递调用函数所在类名");
+        Assert.isTrue(StringUtils.isNotEmpty(callFunctionClass) || StringUtils.isNotEmpty(callFunctionBeanName),
+                "function call需要传递方法所在类名或bean名称");
         Assert.isTrue(CollectionUtils.isNotEmpty(callFunctionMethodList), "function call接口必须传递调用函数名列表");
         String userMessage = request.getUserMessage();
 
+        Object instance;
+        if(StringUtils.isNotEmpty(callFunctionBeanName)) {
+            log.info("callFunctionClass is bean");
+            // 从spring容器中获取该bean
+            instance = context.getBean(callFunctionBeanName);
+        } else if(StringUtils.isNotEmpty(callFunctionClass)) {
+            log.info("callFunctionClass is not bean");
+            instance = Class.forName(callFunctionClass).newInstance();
+        } else {
+            throw new RuntimeException("function call参数传递错误");
+        }
+        Assert.isTrue(instance != null, "function call实例获取失败");
+
         List<FunctionDefinition> definitions = getFunctionDefinitionList(callFunctionClass, callFunctionMethodList);
-        Object instance = Class.forName(callFunctionClass).getDeclaredConstructor().newInstance();
         Method[] methods = instance.getClass().getDeclaredMethods();
 
         List<ChatRequestMessage> messages = new ArrayList<>();
@@ -190,16 +211,19 @@ public class OpenAiServiceImpl implements OpenAiService {
         return completionsOptions;
     }
 
-    private List<FunctionDefinition> getFunctionDefinitionList(String callFunctionClass,
+    private List<FunctionDefinition> getFunctionDefinitionList(Object callFunctionInstance,
                                                                List<String> methodNames) throws Exception {
         List<FunctionDefinition> functions = new ArrayList<>();
-        Object instance = Class.forName(callFunctionClass).getDeclaredConstructor().newInstance();
-        Method[] methods = instance.getClass().getDeclaredMethods();
+        Method[] methods = callFunctionInstance.getClass().getDeclaredMethods();
         for (Method method : methods) {
             String methodName = method.getName();
             if(methodNames.contains(method.getName())) {
                 FunctionDefinition definition = new FunctionDefinition(methodName);
                 definition.setParameters(getFunctionSchema(method));
+                Desc desc = method.getAnnotation(Desc.class);
+                if(desc != null) {
+                    definition.setDescription(desc.value());
+                }
                 functions.add(definition);
             }
         }

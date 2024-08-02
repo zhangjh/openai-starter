@@ -9,6 +9,7 @@ import me.zhangjh.openai.dto.ImageGenerateDTO;
 import me.zhangjh.openai.request.ImageGenerateRequest;
 import me.zhangjh.openai.request.TextGenerateRequest;
 import me.zhangjh.openai.service.OpenAiService;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,5 +62,20 @@ public class AppTests {
         request.setChatOption(chatOption);
         ChatCompletions chatCompletions = openAiService.generateTextWithFunctionCall(request);
         log.info("chatCompletions:{}", JSONObject.toJSONString(chatCompletions));
+    }
+
+    @Test
+    public void generateTextWithCb() {
+        TextGenerateRequest request = new TextGenerateRequest();
+        request.setUserMessage("介绍一下你自己");
+        StringBuilder sb = new StringBuilder();
+        openAiService.generateTextWithCb(request, content -> {
+            if(StringUtils.equals("[done]", content)) {
+                log.info("sb:{}", sb);
+            } else {
+                sb.append(content);
+            }
+            return null;
+        });
     }
 }

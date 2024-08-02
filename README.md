@@ -49,3 +49,4 @@
     ```java
    // me.zhangjh.openai.AppTests 
    ```
+5. 如果需要使用Function Call能力，需要将供Function call调用的函数添加上@Desc注解，该注解主要用来告知AI方法的作用描述
