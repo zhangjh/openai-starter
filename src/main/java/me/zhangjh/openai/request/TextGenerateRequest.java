@@ -1,8 +1,8 @@
 package me.zhangjh.openai.request;
 
 import lombok.Data;
-import me.zhangjh.openai.dto.ChatOption;
-import me.zhangjh.openai.dto.ContextMessage;
+import me.zhangjh.openai.pojo.ChatOption;
+import me.zhangjh.openai.pojo.ContextMessage;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,4 +36,9 @@ public class TextGenerateRequest {
         contextMessages.add(contextMessage);
     }
 
+    // 通常回调后的结果会输出JSON便于后续系统对接，直接流式输出没有意义，增加一个选项支持输出最终结果，默认为false
+    private Boolean needStreamResponseWhenToolsCalled = false;
+
+    // 通常回调后的结果需要输出JSON结构，默认为true
+    private Boolean needJsonFormatWhenToolsCalled = true;
 }

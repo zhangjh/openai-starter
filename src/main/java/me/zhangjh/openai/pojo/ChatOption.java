@@ -1,4 +1,4 @@
-package me.zhangjh.openai.dto;
+package me.zhangjh.openai.pojo;
 
 import lombok.Data;
 
@@ -17,9 +17,6 @@ public class ChatOption {
     private Double temperature = 0.7;
 
     private String user;
-
-    // 候选回答数
-    private Integer n = 1;
 
     // 是否流式输出
     private Boolean stream = true;

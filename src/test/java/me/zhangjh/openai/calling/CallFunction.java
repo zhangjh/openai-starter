@@ -1,7 +1,7 @@
 package me.zhangjh.openai.calling;
 
 import lombok.extern.slf4j.Slf4j;
-import me.zhangjh.openai.annotation.Desc;
+import me.zhangjh.openai.annotation.FunDesc;
 
 import java.time.LocalTime;
 
@@ -11,8 +11,7 @@ import java.time.LocalTime;
 @Slf4j
 public class CallFunction {
 
-
-    @Desc("获取指定城市天气")
+    @FunDesc("获取指定城市天气")
     public String getWeather(WeatherReq req) {
         log.info("getWeather: {}", req);
 //        WeatherReq weatherReq = JSONObject.parseObject(req, WeatherReq.class);
@@ -24,7 +23,7 @@ public class CallFunction {
         };
     }
 
-    @Desc("获取当前时间")
+    @FunDesc("获取当前时间")
     public String getCurrentTime(TimeReq req) {
 //        TimeReq timeReq = JSONObject.parseObject(req, TimeReq.class);
         return "现在时间是：" + req.getTimezone() + ":" + LocalTime.now();

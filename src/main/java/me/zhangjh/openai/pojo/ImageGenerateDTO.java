@@ -1,4 +1,4 @@
-package me.zhangjh.openai.dto;
+package me.zhangjh.openai.pojo;
 
 import lombok.Data;
 
