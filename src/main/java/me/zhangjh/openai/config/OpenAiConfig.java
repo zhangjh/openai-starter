@@ -7,6 +7,7 @@ import me.zhangjh.openai.impl.OpenAiServiceImpl;
 import me.zhangjh.openai.service.OpenAiService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -35,6 +36,7 @@ public class OpenAiConfig {
     }
 
     @Bean
+    @ConditionalOnProperty(prefix = "chat", name = "api.enabled", havingValue = "true")
     public OpenAIClient textOpenAIClient() {
         return new OpenAIClientBuilder()
                 .credential(new AzureKeyCredential(chatApiKey))
@@ -43,6 +45,7 @@ public class OpenAiConfig {
     }
 
     @Bean
+    @ConditionalOnProperty(prefix = "img", name = "api.enabled", havingValue = "true")
     public OpenAIClient imgOpenAIClient() {
         return new OpenAIClientBuilder()
                 .credential(new AzureKeyCredential(imgApiKey))
